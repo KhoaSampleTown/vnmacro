@@ -333,7 +333,18 @@ def cmd_disclaimer(args) -> None:
     print(DISCLAIMER)
 
 
+def _utf8_console() -> None:
+    """Console Windows mặc định dung cp1252/cp437, không mã hoá nổi tiếng Việt.
+    Thiếu đoạn này thì ngay `--help` đã ném UnicodeEncodeError."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
 def main(argv=None) -> int:
+    _utf8_console()
     p = argparse.ArgumentParser(prog="vnmacro", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("-v", "--verbose", action="store_true")
