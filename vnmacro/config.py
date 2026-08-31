@@ -14,7 +14,14 @@ import yaml
 
 PKG_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = PKG_DIR.parent
-CONFIG_DIR = PROJECT_DIR / "config"
+
+# YAML cấu hình nằm TRONG gói (`vnmacro/config/`) để `pip install` mang theo được.
+# Trước đây nó ở gốc dự án, chạy từ bản clone thì được nhưng cài bằng pip là mất —
+# `narrative_patterns.yaml` không có trong wheel nên mọi lần bóc lời văn đều hỏng.
+# Vẫn giữ đường dẫn cũ làm dự phòng cho bản clone đang dùng dở, và cho ai muốn
+# ghi đè bằng bộ pattern riêng đặt ở gốc dự án.
+CONFIG_DIR = PKG_DIR / "config"
+_LEGACY_CONFIG_DIR = PROJECT_DIR / "config"
 
 
 def _data_root() -> Path:
@@ -64,6 +71,8 @@ REQUEST_DELAY = float(os.environ.get("VNMACRO_DELAY", "0.7"))  # politeness gap
 
 def load_yaml(name: str) -> dict:
     path = CONFIG_DIR / name
+    if not path.exists():
+        path = _LEGACY_CONFIG_DIR / name
     if not path.exists():
         return {}
     with path.open("r", encoding="utf-8") as fh:

@@ -222,7 +222,7 @@ IMF IMTS thay thế.
 - **Tài khoá**: từ lời văn báo cáo tháng (`FISCAL.*`) — nguồn gốc là Bộ Tài chính;
 - **Tiền tệ**: từ **SBV** (`SBV.*`), xem mục 3.
 
-Các flow rỗng vẫn để trong `config/sources.yaml` với `enabled: false` kèm lý do,
+Các flow rỗng vẫn để trong `vnmacro/config/sources.yaml` với `enabled: false` kèm lý do,
 để không phải dò lại.
 
 **3. SBV chỉ công bố tháng hiện tại, không có kho lưu trữ.** Mỗi trang thống kê
@@ -243,7 +243,7 @@ mỗi cái có `.LEVEL` (tỷ đồng) và `.GROWTH_YTD` (% so với cuối năm
 **Chưa lấy được** (đã probe 31/8/2026, đều render bằng JS nên HTML server trả
 về không có bảng): tỷ lệ nợ xấu, tiền mặt/M2, lãi suất điều hành, lãi suất liên
 ngân hàng. Muốn có thì phải chạy headless browser — đổi selector không giải
-quyết được. Các trang này để `enabled: false` trong `config/sources.yaml` kèm
+quyết được. Các trang này để `enabled: false` trong `vnmacro/config/sources.yaml` kèm
 lý do.
 
 **4. Kỳ tham chiếu lấy từ tiêu đề, không lấy từ ngày đăng.** NSO migrate site
@@ -293,8 +293,8 @@ exception**, chỉ cho ra số sai:
 
 | File | Nội dung |
 |---|---|
-| `config/sources.yaml` | nguồn nào bật/tắt, flow IMF nào lấy, sheet ưu tiên, năm backfill |
-| `config/narrative_patterns.yaml` | regex bóc số từ lời văn — phần dễ vỡ nhất được tách khỏi code |
+| `vnmacro/config/sources.yaml` | nguồn nào bật/tắt, flow IMF nào lấy, sheet ưu tiên, năm backfill |
+| `vnmacro/config/narrative_patterns.yaml` | regex bóc số từ lời văn — phần dễ vỡ nhất được tách khỏi code |
 
 Chữ trong báo cáo đổi theo tháng ("ước đạt" / "đạt", có lúc chèn "gần", "khoảng").
 Pattern không khớp thì chỉ **log**, không làm hỏng run. Xem dòng

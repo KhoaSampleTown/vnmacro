@@ -45,7 +45,7 @@ Issues = "https://github.com/KhoaSampleTown/vnmacro/issues"
 include = ["vnmacro*"]
 
 [tool.setuptools.package-data]
-vnmacro = ["../config/*.yaml"]
+vnmacro = ["config/*.yaml"]
 
 [tool.ruff]
 line-length = 100
