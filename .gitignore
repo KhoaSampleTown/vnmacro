@@ -1,0 +1,30 @@
+# ══ DỮ LIỆU — KHÔNG BAO GIỜ COMMIT ══════════════════════════════════════════
+# Repo này phát hành CÔNG CỤ lấy dữ liệu, không phát hành dữ liệu. Kho local
+# hiện ~371 MB gồm archive .docx/.xlsx của NSO và parquet đã xử lý; chúng thuộc
+# về đơn vị công bố, không thuộc giấy phép của gói.
+data/
+*.parquet
+*.csv
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pdf
+
+# bí mật
+.env
+.env.*
+!.env.example
+
+# môi trường & rác
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.log

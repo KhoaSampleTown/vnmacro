@@ -1,0 +1,266 @@
+# Indicators that appear only in the prose of the NSO monthly/quarterly report.
+#
+# Each entry is a regex run against one paragraph at a time; the first match in
+# document order wins. Named groups:
+#   val  - the number (Vietnamese format: "1.834,6" = 1834.6)
+#   dir  - "tăng"/"giảm", used when `signed: true`
+#
+# Vietnamese reports write the month as a word ("tháng Bảy") and the cumulative
+# span as a word too ("bảy tháng năm 2026"), so both are matched loosely.
+#
+# Add patterns freely — an unmatched pattern is logged, never fatal.
+
+patterns:
+
+  # Wording drifts month to month: "ước đạt" vs plain "đạt", and NSO likes to
+  # slip in "gần / khoảng / hơn / trên / xấp xỉ" before the figure. Every
+  # money pattern below therefore allows both.
+  #
+  #   (?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*<num>
+
+  # ------------------------------------------------ state budget: revenue ---
+  - id: FISCAL.REV.TOTAL.MONTH
+    label_vi: Tổng thu ngân sách Nhà nước trong tháng
+    unit: thousand billion VND
+    scope: month
+    pattern: 'Tổng thu ngân sách Nhà nước tháng\s+\S+\s+(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.REV.TOTAL.YTD
+    label_vi: Lũy kế tổng thu ngân sách Nhà nước
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'Lũy kế tổng thu ngân sách Nhà nước.{0,80}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.REV.TOTAL.YTD_PCT_PLAN
+    label_vi: Thu NSNN lũy kế so với dự toán năm
+    unit: '% of annual plan'
+    scope: ytd
+    pattern: 'Lũy kế tổng thu ngân sách Nhà nước.{0,200}?bằng\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*dự toán'
+
+  - id: FISCAL.REV.TOTAL.YTD_YOY
+    label_vi: Thu NSNN lũy kế so với cùng kỳ năm trước
+    unit: '% yoy'
+    scope: ytd
+    signed: true
+    pattern: 'Lũy kế tổng thu ngân sách Nhà nước.{0,260}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*so với cùng kỳ'
+
+  - id: FISCAL.REV.DOMESTIC.YTD
+    label_vi: Thu nội địa, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'Thu nội địa.{0,200}?Lũy kế.{0,60}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.REV.OIL.YTD
+    label_vi: Thu từ dầu thô, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'Thu từ dầu thô.{0,200}?Lũy kế.{0,60}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.REV.TRADE.YTD
+    label_vi: Thu cân đối từ hoạt động xuất, nhập khẩu, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'Thu cân đối ngân sách từ hoạt động xuất, nhập khẩu.{0,220}?[Ll]ũy kế.{0,60}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  # -------------------------------------------- state budget: expenditure ---
+  - id: FISCAL.EXP.TOTAL.MONTH
+    label_vi: Tổng chi ngân sách Nhà nước trong tháng
+    unit: thousand billion VND
+    scope: month
+    pattern: 'Tổng chi ngân sách Nhà nước tháng\s+\S+\s+(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  # Two shapes in use: "...chi ngân sách Nhà nước ước đạt X" (one sentence) and
+  # "Tổng chi ... tháng Năm ước đạt Y. Lũy kế ... ước đạt X" (two sentences).
+  - id: FISCAL.EXP.TOTAL.YTD
+    label_vi: Chi ngân sách Nhà nước, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: '(?:chi ngân sách Nhà nước (?:ước\s+)?đạt|Tổng chi ngân sách Nhà nước.{0,140}?[Ll]ũy kế.{0,60}?(?:ước\s+)?đạt)\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.EXP.TOTAL.YTD_PCT_PLAN
+    label_vi: Chi NSNN lũy kế so với dự toán năm
+    unit: '% of annual plan'
+    scope: ytd
+    pattern: '(?:Tổng )?chi ngân sách Nhà nước.{0,220}?nghìn tỷ đồng,\s*bằng\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*dự toán'
+
+  - id: FISCAL.EXP.TOTAL.YTD_YOY
+    label_vi: Chi NSNN lũy kế so với cùng kỳ năm trước
+    unit: '% yoy'
+    scope: ytd
+    signed: true
+    pattern: '(?:Tổng )?chi ngân sách Nhà nước.{0,260}?dự toán năm và\s+(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*so với cùng kỳ'
+
+  - id: FISCAL.EXP.CURRENT.YTD
+    label_vi: Chi thường xuyên, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'hi thường xuyên.{0,60}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.EXP.DEVINVEST.YTD
+    label_vi: Chi đầu tư phát triển, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'hi đầu tư phát triển.{0,60}?(?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: FISCAL.EXP.INTEREST.YTD
+    label_vi: Chi trả nợ lãi, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'hi trả nợ lãi\s+(?:là\s+)?(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  # ------------------------------------------------------------ investment ---
+  - id: INVEST.PUBLIC.YTD
+    label_vi: Vốn đầu tư thực hiện từ nguồn ngân sách Nhà nước, lũy kế
+    unit: thousand billion VND
+    scope: ytd
+    pattern: 'vốn đầu tư thực hiện từ nguồn ngân sách Nhà nước (?:ước\s+)?đạt\s+(?:gần|khoảng|hơn|trên|xấp xỉ)?\s*(?P<val>\d[\d.]*(?:,\d+)?)\s*nghìn tỷ đồng'
+
+  - id: INVEST.PUBLIC.YTD_PCT_PLAN
+    label_vi: Đầu tư công lũy kế so với kế hoạch năm
+    unit: '% of annual plan'
+    scope: ytd
+    pattern: 'vốn đầu tư thực hiện từ nguồn ngân sách Nhà nước ước đạt\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*kế hoạch'
+
+  - id: FDI.DISBURSED.YTD
+    label_vi: Vốn FDI thực hiện, lũy kế
+    unit: billion USD
+    scope: ytd
+    pattern: 'FDI\) thực hiện tại Việt Nam.{0,60}?ước đạt\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: FDI.DISBURSED.YTD_YOY
+    label_vi: Vốn FDI thực hiện lũy kế so với cùng kỳ
+    unit: '% yoy'
+    scope: ytd
+    signed: true
+    pattern: 'FDI\) thực hiện tại Việt Nam.{0,140}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*so với cùng kỳ'
+
+  # ------------------------------------------------------------------- GDP ---
+  # Quarterly issues only.
+  - id: GDP.GROWTH.QUARTER_YOY
+    label_vi: Tốc độ tăng GDP quý so với cùng kỳ năm trước
+    unit: '% yoy'
+    scope: quarter
+    signed: true
+    pattern: 'GDP\s+quý\s+[IVX]+.{0,40}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*so với cùng kỳ'
+
+  - id: GDP.GROWTH.YTD_YOY
+    label_vi: Tốc độ tăng GDP lũy kế so với cùng kỳ năm trước
+    unit: '% yoy'
+    scope: ytd
+    signed: true
+    pattern: 'GDP\s+(?:sáu|chín|6|9)\s*tháng.{0,60}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%'
+
+  # ------------------------------------------------------------- external ---
+  # "nhập siêu" (deficit) is stored negative, "xuất siêu" (surplus) positive.
+  - id: TRADE.BALANCE.MONTH
+    label_vi: Cán cân thương mại hàng hóa trong tháng
+    unit: billion USD
+    scope: month
+    signed: true
+    pattern: 'cán cân thương mại hàng hóa tháng\s+\S+\s+(?P<dir>xuất siêu|nhập siêu)\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.YTD
+    label_vi: Cán cân thương mại hàng hóa, lũy kế
+    unit: billion USD
+    scope: ytd
+    signed: true
+    pattern: 'Tính chung.{0,60}?cán cân thương mại hàng hóa\s+(?P<dir>xuất siêu|nhập siêu)\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.DOMESTIC.YTD
+    label_vi: Cán cân thương mại khu vực kinh tế trong nước, lũy kế
+    unit: billion USD
+    scope: ytd
+    signed: true
+    pattern: 'khu vực kinh tế trong nước\s+(?P<dir>xuất siêu|nhập siêu)\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.FDI.YTD
+    label_vi: Cán cân thương mại khu vực FDI (kể cả dầu thô), lũy kế
+    unit: billion USD
+    scope: ytd
+    signed: true
+    pattern: 'khu vực có vốn đầu tư nước ngoài[^)]*\)\s*(?P<dir>xuất siêu|nhập siêu)\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.TURNOVER.MONTH
+    label_vi: Tổng kim ngạch xuất, nhập khẩu hàng hóa trong tháng
+    unit: billion USD
+    scope: month
+    pattern: 'Trong tháng\s+\S+,\s*tổng kim ngạch xuất, nhập khẩu hàng hóa đạt\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.TURNOVER.YTD
+    label_vi: Tổng kim ngạch xuất, nhập khẩu hàng hóa, lũy kế
+    unit: billion USD
+    scope: ytd
+    pattern: 'Tính chung.{0,40}?tổng kim ngạch xuất, nhập khẩu hàng hóa đạt\s+(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  # Partner balances stated in prose; the machine-readable bilateral panel
+  # comes from IMF IMTS, these are the fast official read.
+  - id: TRADE.BALANCE.USA.YTD
+    label_vi: Xuất siêu sang Hoa Kỳ, lũy kế
+    unit: billion USD
+    scope: ytd
+    breakdown: USA
+    signed: true
+    pattern: '(?P<dir>xuất siêu|nhập siêu)\s+(?:sang|từ)\s+Hoa Kỳ\s+(?:đạt\s+)?(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.CHN.YTD
+    label_vi: Cán cân thương mại với Trung Quốc, lũy kế
+    unit: billion USD
+    scope: ytd
+    breakdown: CHN
+    signed: true
+    pattern: '(?P<dir>xuất siêu|nhập siêu)\s+(?:sang|từ)\s+Trung Quốc\s+(?:đạt\s+)?(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.EU.YTD
+    label_vi: Cán cân thương mại với EU, lũy kế
+    unit: billion USD
+    scope: ytd
+    breakdown: EU
+    signed: true
+    pattern: '(?P<dir>xuất siêu|nhập siêu)\s+(?:sang|từ)\s+EU\s+(?:đạt\s+)?(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.KOR.YTD
+    label_vi: Cán cân thương mại với Hàn Quốc, lũy kế
+    unit: billion USD
+    scope: ytd
+    breakdown: KOR
+    signed: true
+    pattern: '(?P<dir>xuất siêu|nhập siêu)\s+(?:sang|từ)\s+Hàn Quốc\s+(?:đạt\s+)?(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: TRADE.BALANCE.JPN.YTD
+    label_vi: Cán cân thương mại với Nhật Bản, lũy kế
+    unit: billion USD
+    scope: ytd
+    breakdown: JPN
+    signed: true
+    pattern: '(?P<dir>xuất siêu|nhập siêu)\s+(?:sang|từ)\s+Nhật Bản\s+(?:đạt\s+)?(?P<val>\d[\d.]*(?:,\d+)?)\s*tỷ USD'
+
+  - id: FX.USD_INDEX.MOM
+    label_vi: Chỉ số giá đô la Mỹ so với tháng trước
+    unit: '% mom'
+    scope: month
+    signed: true
+    pattern: 'chỉ số giá đô la Mỹ tháng\s+\S+\s+(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%\s*so với tháng trước'
+
+  # ------------------------------------------------------------- monetary ---
+  # Present in older issues; the banking section was dropped from the monthly
+  # report in recent years, so these usually fall through to IMF MFS instead.
+  - id: MONEY.CREDIT.GROWTH_YTD
+    label_vi: Tăng trưởng tín dụng so với cuối năm trước
+    unit: '% ytd'
+    scope: ytd
+    signed: true
+    pattern: 'tăng trưởng tín dụng.{0,80}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%'
+
+  - id: MONEY.M2.GROWTH_YTD
+    label_vi: Tổng phương tiện thanh toán so với cuối năm trước
+    unit: '% ytd'
+    scope: ytd
+    signed: true
+    pattern: 'Tổng phương tiện thanh toán.{0,80}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%'
+
+  - id: MONEY.DEPOSITS.GROWTH_YTD
+    label_vi: Huy động vốn của các tổ chức tín dụng so với cuối năm trước
+    unit: '% ytd'
+    scope: ytd
+    signed: true
+    pattern: 'Huy động vốn của các tổ chức tín dụng.{0,80}?(?P<dir>tăng|giảm)\s+(?P<val>\d[\d.]*(?:,\d+)?)%'

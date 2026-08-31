@@ -1,0 +1,216 @@
+# What the pipeline collects, and from where.
+#
+# Everything below has been probed against the live endpoints — flows that
+# Vietnam does not report to are marked `enabled: false` with the reason, so
+# nobody re-discovers the same dead end.
+
+nso:
+  # WordPress REST tags on nso.gov.vn. `monthly_report` carries both the
+  # narrative .docx and the ~20-sheet statistics .xlsx.
+  tags:
+    monthly_report: {id: 727, enabled: true}
+    cpi:            {id: 883, enabled: true}
+    trade:          {id: 876, enabled: false}   # duplicates the monthly tables
+    iip:            {id: 872, enabled: false}   # duplicates sheet 2 of the tables
+
+  # Sheets of the monthly workbook worth promoting. Everything else is still
+  # parsed and stored — this list only drives the DSGE panel.
+  priority_sheets:
+    - "16.CPI"          # consumer prices, by COICOP group
+    - "12.FDI"          # registered FDI: new, adjusted, by province/partner
+    - "14. XK tháng"    # exports: total, by ownership, by commodity
+    - "15. NK tháng"    # imports: same
+    - "11.VDT"          # public investment executed
+    - "13.Tongmuc"      # retail sales & services (proxy for consumption)
+    - "2.IIPthang"      # industrial production index
+
+  # How far back to go. NSO monthly reports exist from 2005; the reference
+  # period is parsed from the title, never from the WordPress publish date.
+  backfill_from: 2015
+
+
+imf:
+  base: https://api.imf.org/external/sdmx/2.1
+  default_start: "2000"
+  flows:
+
+    - id: IMTS
+      agency: IMF.STA
+      dataset: imf_trade_partner
+      enabled: true
+      note: >
+        Bilateral goods trade, monthly — the successor to DOTS. Indicators:
+        XG_FOB_USD (exports FOB), MG_CIF_USD (imports CIF), TBG_USD (balance).
+        This is the source for import/export shares by partner country.
+      filters: {COUNTRY: VNM}
+
+    - id: ITG
+      agency: IMF.STA
+      dataset: imf_trade_total
+      enabled: true
+      note: Trade in goods, totals — cross-check on the NSO monthly aggregate.
+      filters: {COUNTRY: VNM}
+
+    - id: BOP
+      agency: IMF.STA
+      dataset: imf_bop
+      enabled: true
+      note: >
+        Balance of payments. Direct investment lives here:
+        D_F + BOP_ACCOUNTING_ENTRY=L_NIL_T is FDI *into* Vietnam,
+        D_F + A_NFA_T is Vietnamese direct investment *abroad*,
+        D_F + NNAFANIL_T is the net position. CAB is the current account.
+      filters: {COUNTRY: VNM}
+
+    - id: ER
+      agency: IMF.STA
+      dataset: imf_exchange_rates
+      enabled: true
+      note: USD_XDC / XDC_USD are the VND-per-USD pair.
+      filters: {COUNTRY: VNM}
+
+    - id: ANEA
+      agency: IMF.STA
+      dataset: imf_national_accounts
+      enabled: true
+      note: >
+        Annual national accounts. B1GQ = GDP, P3 = final consumption,
+        P5/P51G = gross capital formation, P6 = exports, P7 = imports.
+        PRICE_TYPE V = current prices, Q = chained volume.
+      filters: {COUNTRY: VNM}
+
+    - id: CPI
+      agency: IMF.STA
+      dataset: imf_cpi
+      enabled: true
+      note: >
+        IMF-harmonised CPI, monthly. Independent of the NSO basket revisions,
+        so it doubles as a validation series for the chain-linked NSO index.
+      filters: {COUNTRY: VNM}
+
+    - id: FSIC
+      agency: IMF.STA
+      dataset: imf_fsi
+      enabled: true
+      note: Financial soundness indicators, quarterly — banking-sector state.
+      filters: {COUNTRY: VNM}
+
+    - id: PCPS
+      agency: IMF.RES
+      dataset: imf_commodity_prices
+      enabled: true
+      note: >
+        Global primary commodity prices — not country-specific. Feeds
+        terms-of-trade and imported-inflation shocks.
+      filters: {}
+
+    # ---- probed and empty for Vietnam; left here so the gap is documented ----
+    - id: MFS_MA
+      agency: IMF.STA
+      dataset: imf_monetary_aggregates
+      enabled: false
+      note: >
+        NO VIETNAM DATA. Vietnam does not report monetary aggregates to IMF
+        MFS. M2, credit growth and policy rates must come from SBV
+        (sbv.gov.vn) or from the NSO narrative in older monthly reports —
+        see narrative_patterns.yaml MONEY.*.
+      filters: {COUNTRY: VNM}
+
+    - id: MFS_IR
+      agency: IMF.STA
+      dataset: imf_interest_rates
+      enabled: false
+      note: NO VIETNAM DATA (probed 2026-08). Same workaround as MFS_MA.
+      filters: {COUNTRY: VNM}
+
+    - id: QNEA
+      agency: IMF.STA
+      dataset: imf_national_accounts_q
+      enabled: false
+      note: >
+        NO VIETNAM DATA — quarterly GDP is only in the NSO quarterly report
+        (narrative pattern GDP.GROWTH.QUARTER_YOY).
+      filters: {COUNTRY: VNM}
+
+    - id: QGFS
+      agency: IMF.STA
+      dataset: imf_gov_finance_q
+      enabled: false
+      note: >
+        NO VIETNAM DATA — fiscal figures come from the NSO narrative
+        (FISCAL.* patterns), sourced from the Ministry of Finance.
+      filters: {COUNTRY: VNM}
+
+    - id: EER
+      agency: IMF.STA
+      dataset: imf_effective_exchange_rates
+      enabled: false
+      note: NO VIETNAM DATA (no published NEER/REER for VNM in this flow).
+      filters: {COUNTRY: VNM}
+
+
+sbv:
+  # Ngân hàng Nhà nước — the only source for Vietnam's monetary block. Each
+  # page shows ONLY the latest month with no archive, so history builds up by
+  # running the pipeline monthly. SBV sits behind an F5 WAF that returns a
+  # 246-byte "Request Rejected" page under load; a rejected page is skipped
+  # and logged, never parsed.
+  enabled: true
+  pages:
+    - id: m2
+      slug: tong-phuong-tien-thanh-toan
+      enabled: true
+      note: >
+        Tổng phương tiện thanh toán (M2) + tiền gửi của tổ chức kinh tế và
+        dân cư, số dư (tỷ đồng) và tăng trưởng so với cuối năm trước.
+        Server-rendered — confirmed working 2026-08-31.
+
+    - id: credit
+      slug: du-no-tin-dung-doi-voi-nen-kt-dttktt
+      enabled: true
+      note: >
+        Dư nợ tín dụng đối với nền kinh tế, chia theo ngành. The WAF is
+        stricter on this page than on m2; if it is skipped, re-run later.
+
+    - id: ldr
+      slug: ty-le-du-no-cho-vay-so-voi-tong-tien-gui
+      enabled: true
+      note: >
+        Tỷ lệ dư nợ cho vay / tổng tiền gửi (LDR). Reached the WAF on the
+        first attempt; re-run on its own if it is skipped.
+
+    # Fetched fine but rendered client-side — the served HTML has an empty
+    # table shell (cash_ratio) or none at all (npl), so there is nothing to
+    # parse. Left disabled so the request budget goes to pages that work;
+    # enabling them needs a headless browser, not a different selector.
+    - id: cash_ratio
+      slug: tien-mat-luu-thong-tren-tong-phuong-tien-thanh-toan
+      enabled: false
+      note: NO SERVER-RENDERED TABLE (probed 2026-08-31) — JS only.
+
+    - id: npl
+      slug: ty-le-no-xau-trong-tong-du-no-tin-dung
+      enabled: false
+      note: NO SERVER-RENDERED TABLE (probed 2026-08-31) — JS only.
+
+    - id: bop
+      slug: can-can-thanh-toan-quoc-te
+      enabled: false
+      note: >
+        Cán cân thanh toán quốc tế — overlaps IMF BOP, which is an open API
+        with full history. Enable only if you need the SBV vintage.
+
+
+customs:
+  # Cục Hải quan (Bộ Tài chính). The catalog API behind the "Số liệu định kỳ"
+  # page requires a CAPTCHA for any query beyond the default first page, so
+  # this pipeline only reads the un-gated default listing — the 20 most recent
+  # releases, which is roughly two months of publications. That is enough to
+  # stay current; it cannot backfill, and no attempt is made to defeat the
+  # CAPTCHA. Bilateral history comes from IMF IMTS instead.
+  enabled: true
+  catalog_url: https://www.customs.gov.vn/bridge?url=/customs/api/GetTKHQInfo
+  referer: https://www.customs.gov.vn/index.jsp?pageId=5002
+  page_size: 20
+  download_pdfs: true
+  parse_pdfs: false     # tables are PDF-only; enable once you need the detail

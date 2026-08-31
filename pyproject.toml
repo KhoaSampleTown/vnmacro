@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vnmacro"
+version = "0.1.0"
+description = "Dữ liệu kinh tế vĩ mô Việt Nam từ Tổng cục Thống kê, IMF và Ngân hàng Nhà nước"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["vietnam", "macro", "gdp", "cpi", "fiscal", "trade", "nso", "imf", "sbv"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+  "polars>=1.44",
+  "duckdb>=1.5",
+  "openpyxl>=3.1",
+  "python-docx>=1.2",
+  "xlrd>=2.0",
+  "olefile>=0.47",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.0",
+  "requests>=2.32",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+pdf = ["pdfplumber>=0.11"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+vnmacro = "vnmacro.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/KhoaSampleTown/vnmacro"
+Issues = "https://github.com/KhoaSampleTown/vnmacro/issues"
+
+[tool.setuptools.packages.find]
+include = ["vnmacro*"]
+
+[tool.setuptools.package-data]
+vnmacro = ["../config/*.yaml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

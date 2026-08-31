@@ -1,0 +1,18 @@
+# Windows on ARM64 note: pyarrow publishes no win_arm64 wheel, so parquet I/O
+# goes through polars' own writer (and duckdb for SQL), not pandas+pyarrow.
+polars>=1.44
+duckdb>=1.5
+
+# Modern NSO releases: .xlsx tables + .docx narrative.
+openpyxl>=3.1
+python-docx>=1.2
+
+# Reports up to ~2017 ship legacy formats instead.
+xlrd>=2.0            # BIFF .xls  (xlrd 2.x reads .xls only, which is the point)
+olefile>=0.47        # Word 97 .doc text recovery
+
+pdfplumber>=0.11     # customs releases, and NSO's PDF-only CPI months
+beautifulsoup4>=4.12 # SBV pages
+lxml>=5.0
+requests>=2.32
+PyYAML>=6.0
