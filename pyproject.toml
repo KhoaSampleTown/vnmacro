@@ -50,3 +50,10 @@ vnmacro = ["config/*.yaml"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+[tool.ruff.lint]
+# Khai báo dứt khoát bộ quy tắc. Bộ mặc định của ruff nở ra theo phiên bản,
+# nên nếu để trống thì một bản ruff mới sẽ làm CI đỏ vào ngày không ai đụng
+# tới code. Bốn nhóm dưới đây bắt lỗi thật: E4 import hỏng, E7/E9 cú pháp và
+# logic sai, F tên chưa định nghĩa hoặc import thừa.
+select = ["E4", "E7", "E9", "F"]
+
