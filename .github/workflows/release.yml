@@ -1,0 +1,62 @@
+name: release
+
+# Phát hành lên PyPI bằng Trusted Publishing (OIDC). PyPI tin thẳng repo này
+# và đúng file workflow này, nên KHÔNG có token nào tồn tại ở bất cứ đâu —
+# không có gì để rò rỉ, không có gì phải xoay vòng.
+#
+# Tên file phải đúng là release.yml. Đó là thứ đã khai với PyPI ở mục
+# "Workflow name"; đổi tên file là mất quyền phát hành.
+on:
+  # Cắt một GitHub Release  ->  đẩy lên PyPI thật.
+  release:
+    types: [published]
+  # Bấm tay trong tab Actions  ->  đẩy lên TestPyPI để thử.
+  # Cần khai pending publisher riêng ở test.pypi.org. Chưa khai thì đừng
+  # bấm đường này, còn lại không ảnh hưởng gì.
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      # Soát metadata TRƯỚC khi đẩy. PyPI từ chối gói là số version coi như
+      # mất vĩnh viễn, không nộp lại cùng số được.
+      - run: python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  testpypi:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write          # bắt buộc, đây là thứ thay cho token
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  pypi:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
