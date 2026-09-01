@@ -8,9 +8,13 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      # Một ô hỏng thì vẫn chạy nốt các ô còn lại. Mặc định GitHub huỷ cả
+      # matrix, làm mất thông tin đúng lúc cần nhất là ô nào hỏng ô nào không.
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +24,13 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: python tests/test_parsing.py
       - run: python -m ruff check vnmacro
+
+      # Gọi thẳng vào CLI. Console Windows mặc định là cp1252 nên mọi chuỗi
+      # tiếng Việt in ra đều có thể ném UnicodeEncodeError — mà dữ liệu NSO
+      # vốn là tiếng Việt nên đây không phải trường hợp hiếm.
+      # TUYỆT ĐỐI không đặt PYTHONUTF8 hay PYTHONIOENCODING ở đây — đặt vào là
+      # phép thử mất sạch tác dụng.
+      - name: CLI chạy được và in được tiếng Việt
+        run: |
+          vnmacro --help
+          vnmacro disclaimer
